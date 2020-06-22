@@ -1,0 +1,36 @@
+# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
+# For more information see: https://help.github.com/actions/language-and-framework-guides/publishing-nodejs-packages
+
+name: Node.js Package
+
+on:
+  release:
+    types: [created]
+    
+
+jobs:
+  augment-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [8.x, 10.x, 12.x]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: |
+        npm install --build-from-source
+        ./node_modules/.bin/node-pre-gyp package
+    - name: Upload a Release Asset
+      uses: actions/upload-release-asset@v1.0.2
+      with:
+        # The URL for uploading assets to the release
+        upload_url: ${{github.event.upload}}
+        # The path to the asset you want to upload
+        asset_path: "build/stage/node_oom_heapdump_native-vXXX-node-vYYY-linux-x64.tar.gz"
+        # The name of the asset you want to upload
+        asset_name: "node_oom_heapdump_native-vXXX-node-vYYY-linux-x64.tar.gz"
+        # The content-type of the asset you want to upload. See the supported Media Types here: https://www.iana.org/assignments/media-types/media-types.xhtml for more information
+        asset_content_type: "application/gzip"
